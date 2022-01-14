@@ -31,6 +31,9 @@ RUN set -ex; \
     rm -rf /tmp/jq.rpm /tmp/oniguruma.rpm
 
 RUN set -ex; \
+    dnf -y update; \
+    dnf -y install crypto-policies-scripts; \
+    fips-mode-setup --enable; \
     dnf -y install \
         percona-server-mongodb-mongos-${FULL_PERCONA_VERSION} \
         percona-server-mongodb-shell-${FULL_PERCONA_VERSION} \
