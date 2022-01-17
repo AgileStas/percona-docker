@@ -1,4 +1,4 @@
-FROM golang:1.17 AS go_builder
+FROM goboring/golang:1.16.7b7 AS go_builder
 
 RUN git clone --branch=main https://github.com/percona/percona-xtradb-cluster-operator.git /go/src/github.com/percona/percona-xtradb-cluster-operator/
 
@@ -33,9 +33,9 @@ helps enterprises avoid downtime and outages and meet expected customer experien
 LABEL org.opencontainers.image.license="GPL"
 
 # do not use PXB 8.0.14-1 (PXB-2279)
-ENV PXB_VERSION 8.0.25-17.1
-ENV PS_VERSION 8.0.25-15.1
-ENV PXC_VERSION 8.0.25-15.1
+ENV PXB_VERSION 8.0.26-18.1
+ENV PS_VERSION 8.0.26-16.1
+ENV PXC_VERSION 8.0.26-16.1
 ENV PXC_REPO release
 ENV KUBECTL_VERSION=v1.19.12
 ENV KUBECTL_SHA256SUM=9a9123b58e3287fdca20db45ab003426d30e7a77ec57605fa25947bc68f6cabf
@@ -54,7 +54,12 @@ RUN set -ex; \
     gpg --batch --export --armor 99DB70FAE1D7CE227FB6488205B555B38483C65D > ${GNUPGHOME}/RPM-GPG-KEY-centosofficial; \
     gpg --batch --export --armor 94E279EB8D8F25B21810ADF121EA45AB2F86D6A1 > ${GNUPGHOME}/RPM-GPG-KEY-EPEL-8; \
     rpmkeys --import ${GNUPGHOME}/RPM-GPG-KEY-Percona ${GNUPGHOME}/RPM-GPG-KEY-centosofficial ${GNUPGHOME}/RPM-GPG-KEY-EPEL-8; \
-    microdnf install -y findutils; \
+    microdnf -y update; \
+    microdnf -y install crypto-policies-scripts; \
+    fips-mode-setup --enable; \
+    microdnf -y install findutils; \
+    microdnf clean all; \
+    rm -rf /var/cache/dnf /var/cache/yum; \
     curl -Lf -o /tmp/percona-release.rpm https://repo.percona.com/yum/percona-release-latest.noarch.rpm; \
     rpmkeys --checksig /tmp/percona-release.rpm; \
     rpm -i /tmp/percona-release.rpm; \
@@ -73,16 +78,15 @@ RUN set -ex; \
 	rm -rf /tmp/socat.rpm /tmp/numactl-libs.rpm /tmp/libev.rpm /tmp/jq.rpm /tmp/oniguruma.rpm /tmp/pv.rpm
 
 RUN set -ex; \
-	microdnf install -y \
-		shadow-utils \
-		hostname \
-		libaio \
-		iproute \
-		tar \
-		cracklib-dicts \
-		findutils; \
-	microdnf clean all; \
-	rm -rf /var/cache/dnf /var/cache/yum
+    microdnf -y install \
+        shadow-utils \
+        hostname \
+        libaio \
+        iproute \
+        tar \
+        cracklib-dicts; \
+    microdnf clean all; \
+    rm -rf /var/cache/dnf /var/cache/yum
 
 # create mysql user/group before mysql installation
 RUN groupadd -g 1001 mysql; \

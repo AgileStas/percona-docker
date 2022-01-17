@@ -1,4 +1,4 @@
-FROM golang:1.17 AS go_builder
+FROM goboring/golang:1.16.7b7 AS go_builder
 WORKDIR /go/src/github.com/percona/percona-xtradb-cluster-operator/src
 
 RUN export GO111MODULE=off \
@@ -16,7 +16,12 @@ LABEL name="HAproxy" \
 
 # check repository package signature in secure way
 RUN export GNUPGHOME="$(mktemp -d)" \
-	&& microdnf install -y findutils \
+	&& microdnf -y update \
+	&& microdnf -y install crypto-policies-scripts \
+	&& fips-mode-setup --enable \
+	&& microdnf -y install findutils \
+	&& microdnf clean all \
+	&& rm -rf /var/cache/dnf /var/cache/yum \
 	&& gpg --keyserver keyserver.ubuntu.com --recv-keys 430BDF5C56E7C94E848EE60C1C4CBDCDCD2EFD2A \
 	&& gpg --export --armor 430BDF5C56E7C94E848EE60C1C4CBDCDCD2EFD2A > ${GNUPGHOME}/RPM-GPG-KEY-Percona \
 	&& rpmkeys --import ${GNUPGHOME}/RPM-GPG-KEY-Percona \
@@ -25,13 +30,13 @@ RUN export GNUPGHOME="$(mktemp -d)" \
 	&& rpm -i /tmp/percona-release.rpm \
 	&& rm -rf "$GNUPGHOME" /tmp/percona-release.rpm \
 	&& rpm --import /etc/pki/rpm-gpg/PERCONA-PACKAGING-KEY \
-	&& percona-release setup pdpxc-8.0.25
+	&& percona-release setup pdpxc-8.0.26
 
 # install exact version of PS for repeatability
-ENV PERCONA_VERSION 8.0.25-15.1.el8
+ENV PERCONA_VERSION 8.0.26-16.1.el8
 
 RUN set -ex; \
-    microdnf install -y \
+    microdnf -y install \
         shadow-utils \
         percona-haproxy \
         percona-xtradb-cluster-client-${PERCONA_VERSION} \
