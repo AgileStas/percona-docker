@@ -6,8 +6,20 @@ LABEL name="Percona PostgreSQL Distribution" \
     description="Percona Distribution for PostgreSQL is a collection of tools to assist you in managing your PostgreSQL database system" \
     maintainer="Percona Development <info@percona.com>"
 
-RUN microdnf -y update; \
-    microdnf -y install glibc-langpack-en
+# Check https://access.redhat.com/errata/RHBA-2020:4536
+# and https://bugzilla.redhat.com/show_bug.cgi?id=1832743
+# for sources of enabling FIPS-140-2 support
+#
+# platform-python-pip is removed due to CVE-2019-20916, VULNDB-229216
+# python3-pip-wheel is required by platform-python
+RUN set -ex; \
+    microdnf -y update; \
+    microdnf -y install glibc-langpack-en; \
+    microdnf -y install crypto-policies-scripts; \
+    microdnf -y remove platform-python-pip; \
+    microdnf clean all; \
+    rm -rf /var/cache/dnf /var/cache/yum; \
+    fips-mode-setup --enable
 
 ENV LC_ALL en_US.utf-8
 ENV LANG en_US.utf-8
