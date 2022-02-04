@@ -39,6 +39,14 @@ RUN set -ex; \
     rpmkeys --checksig /tmp/epel-release.rpm; \
     rpm -i /tmp/percona-release.rpm /tmp/epel-release.rpm; \
     rm -rf "$GNUPGHOME" /tmp/percona-release.rpm /tmp/epel-release.rpm; \
+    curl -Lf -o /tmp/python3-dateutil.rpm http://linuxone.cloud.marist.edu:8080/repos/rdo/rhel8.0/deps/Packages/python3-dateutil-2.8.0-1.el8ost.noarch.rpm; \
+    curl -Lf -o /tmp/python3-pyparsing.rpm http://linuxone.cloud.marist.edu:8080/repos/rdo/rhel8.0/deps/Packages/python3-pyparsing-2.3.1-1.el8ost.noarch.rpm; \
+    curl -Lf -o /tmp/python3-six.rpm http://linuxone.cloud.marist.edu:8080/repos/rdo/rhel8.0/deps/Packages/python3-six-1.12.0-1.el8ost.noarch.rpm; \
+    rpmkeys --checksig /tmp/python3-dateutil.rpm; \
+    rpmkeys --checksig /tmp/python3-pyparsing.rpm; \
+    rpmkeys --checksig /tmp/python3-six.rpm; \
+    rpm -i /tmp/python3-dateutil.rpm /tmp/python3-pyparsing.rpm /tmp/python3-six.rpm; \
+    rm -rf /tmp/python3-dateutil.rpm /tmp/python3-pyparsing.rpm /tmp/python3-six.rpm; \
     rpm --import /etc/pki/rpm-gpg/PERCONA-PACKAGING-KEY; \
     percona-release enable ppg-${PG_MAJOR} release
 
